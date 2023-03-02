@@ -95,16 +95,15 @@ class ScrambleSquare():
         return orientations
 
 
-def solve_scramble(pieces: List[int]) -> None:
+def solve_scramble(pieces: List[int], verbose=True) -> None:
     def solve(k: int, puzzle, stack: List[int]):
         calls[k] += 1
         if k == SIZE:
-            print('Solution found!!')
-            print(puzzle)
-            orientations = puzzle.rotation_mapping()
-            print('orientations: ', orientations)
-            print('# calls =', sum(calls))
-            print(' ')
+            solution = [str(x) if x != -1 else '-' for x in puzzle.order]
+            solution_str = ''.join(solution)
+            solutions.add(solution_str)
+            if verbose:
+                print_solution(puzzle, calls)
             return
         for idx in range(len(stack)):
             # select a new piece that hasn't been used
@@ -126,12 +125,20 @@ def solve_scramble(pieces: List[int]) -> None:
     calls = [0] * (SIZE + 1)
     stack = [0, 1, 2, 3, 4, 5, 6, 7, 8]
     puzzle = ScrambleSquare(pieces)
+    solutions = set()
 
     solve(0, puzzle, stack)
 
-    print('number of solutions =', calls[SIZE])
-    print('total calls =', sum(calls))
-    print('calls per position:', calls)
+    return solutions, calls
+
+
+def print_solution(puzzle, calls):
+    print('Solution found!!')
+    print(puzzle)
+    orientations = puzzle.rotation_mapping()
+    print('orientations: ', orientations)
+    print('# calls =', sum(calls))
+    print(' ')
 
 
 def find_first(array, value):
@@ -155,6 +162,24 @@ if __name__ == "__main__":
         [-purple, -green, +red, +purple]
     ]
 
-    solve_scramble(cards)
+    cactus, aloe, paddle, heart = 1, 2, 3, 4
+    # + => leaves, - => pot
+    cards = [
+        [-aloe, -cactus, +heart, +paddle],
+        [-paddle, -aloe, +heart, +cactus],
+        [-paddle, -heart, +cactus, +aloe],
+        [-heart, -paddle, +cactus, +aloe],
+        [-heart, -aloe, +cactus, +paddle],
+        [-cactus, -paddle, +heart, +aloe],
+        [-cactus, -paddle, +heart, +aloe],
+        [-cactus, -aloe, +cactus, +paddle],
+        [-heart, -paddle, +heart, +aloe]
+    ]   
+
+    solutions, calls = solve_scramble(cards)
+
+    print('number of solutions =', len(solutions))
+    print('total calls =', sum(calls))
+    print('calls per position:', calls)
 
     print('Time taken:', datetime.now() - startTime)
