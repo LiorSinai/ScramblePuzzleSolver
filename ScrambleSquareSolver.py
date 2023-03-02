@@ -123,7 +123,7 @@ class ScrambleSquare():
         return hash
 
 
-def solve_scramble(pieces: List[int], check_repeats=False) -> None:
+def solve_scramble(pieces: List[int], check_repeats=False, verbose=True) -> None:
     def solve(k: int, puzzle, stack: List[int], history: Set=set(), check_repeats=False):
         calls[k] += 1
         if k == SIZE:
@@ -132,7 +132,8 @@ def solve_scramble(pieces: List[int], check_repeats=False) -> None:
             if check_repeats and solution_str in solutions:
                 return
             solutions.add(solution_str)
-            print_solution(puzzle, calls, check_repeats)
+            if verbose:
+                print_solution(puzzle, calls)
             return
         for idx in range(len(stack)):
             # select a new piece that hasn't been used
@@ -164,9 +165,7 @@ def solve_scramble(pieces: List[int], check_repeats=False) -> None:
 
     solve(0, puzzle, stack, set(), check_repeats=check_repeats)
 
-    print('number of unique solutions =', len(solutions))
-    print('total calls =', sum(calls))
-    print('calls per position:', calls)
+    return solutions, calls
 
 
 def print_solution(puzzle, calls, check_repeats=False):
@@ -211,6 +210,10 @@ if __name__ == "__main__":
         [-green, red, red, -red]
     ]
 
-    solve_scramble(cards, check_repeats=True)
+    solutions, calls = solve_scramble(cards, check_repeats=True, verbose=False)
+
+    print('number of solutions =', len(solutions))
+    print('total calls =', sum(calls))
+    print('calls per position:', calls)
 
     print('Time taken:', datetime.now() - startTime)
