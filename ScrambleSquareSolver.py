@@ -1,5 +1,5 @@
 """
-ScrambleSolver.py
+ScrambleSquareSolver.py
 
 Lior Sinai
 10 March 2017
@@ -16,9 +16,9 @@ Card = [0 1 2 3]   3   1     2   0   1   3   0   2
                      2         1       0       3
 
 Fitting condition:
-Let card1=[a b c d] and card2=[e f g h], then the cards 'fit' if card1[x]+card2[y]=0
-where x=side1-rot1 where side1=0,1,2 or 3 and rot1=0,1,2 or 3
-and similarly for y
+Let card1=[a, b, c, d] and card2=[e, f, g, h], then the cards 'fit' if card1[x] + card2[y] = 0
+where x=side1-rot1 where side1 and rot1 in (0, 1, 2, 3).
+and similarly for y.
 
         6 7 8
 Board:  5 0 1   Start at k=0 in the centre, and place cards in a clockwise spiral for k=1,2,...,8.
@@ -84,6 +84,15 @@ class ScrambleSquare():
             fits = fits and self.fit_2_pieces(
                 piece_k, rot_k, side_k, piece_other, rot_other, side_other)
         return fits
+    
+    def rotation_mapping(self):
+        "A mapping of piece idx to rotation."
+        orientations = dict()
+        for i in range(0, len(self.order)):
+            if self.order[i] == -1:
+                continue
+            orientations[self.order[i]] = self.rotation[i]
+        return orientations
 
 
 def solve_scramble(pieces: List[int]) -> None:
@@ -92,7 +101,8 @@ def solve_scramble(pieces: List[int]) -> None:
         if k == SIZE:
             print('Solution found!!')
             print(puzzle)
-            print('orientations: ', puzzle.rotation)
+            orientations = puzzle.rotation_mapping()
+            print('orientations: ', orientations)
             print('# calls =', sum(calls))
             print(' ')
             return
@@ -122,6 +132,10 @@ def solve_scramble(pieces: List[int]) -> None:
     print('number of solutions =', calls[SIZE])
     print('total calls =', sum(calls))
     print('calls per position:', calls)
+
+
+def find_first(array, value):
+    return next(iter(i for i in range(0, len(array)) if array[i] == value), None)
 
 
 if __name__ == "__main__":
