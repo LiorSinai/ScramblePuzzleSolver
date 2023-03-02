@@ -98,8 +98,7 @@ class ScrambleSquare():
     @staticmethod
     def find_unique(pieces):
         seen = dict()
-        unique = []
-        idx = 0
+        unique = [-1] * len(pieces)
         for i in range(0, len(pieces)):
             is_unique = True
             for r in range(NUM_ORIENTATIONS):
@@ -107,13 +106,12 @@ class ScrambleSquare():
                 key = ScrambleSquare.hash(piece_r)
                 if key in seen:
                     is_unique = False
-                    unique.append(seen[key])
+                    unique[i] = seen[key]
                     continue
             if not is_unique:
                 continue
             seen[key] = i
-            unique.append(i)
-            idx += 1
+            unique[i] = i
         return unique
     
     @staticmethod
@@ -142,8 +140,10 @@ def solve_scramble(pieces: List[int], check_repeats=False, verbose=True) -> None
                 new = puzzle.unique[new]
             # try different orientations of that piece
             for r in range(NUM_ORIENTATIONS):
-                if k != 0 and check_repeats and (k, new, r) in history:
-                    continue # this will skip most but not all duplications
+                if check_repeats and (k, new, r) in history:
+                    if k == 0: # equivalent: go to the last clause in the for loop
+                        break 
+                    continue
                 history.add((k, new, r))
                 if puzzle.fit_position(k, new, r):
                     # go on to the next position on the board
