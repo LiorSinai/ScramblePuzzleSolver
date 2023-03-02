@@ -101,15 +101,15 @@ class ScrambleSquare():
         unique = []
         idx = 0
         for i in range(0, len(pieces)):
-            have_seen = False
-            for r in range(4):
+            is_unique = True
+            for r in range(NUM_ORIENTATIONS):
                 piece_r = pieces[i][r:] + pieces[i][:r]
                 key = ScrambleSquare.hash(piece_r)
                 if key in seen:
+                    is_unique = False
                     unique.append(seen[key])
-                    have_seen = True
                     continue
-            if have_seen:
+            if not is_unique:
                 continue
             seen[key] = i
             unique.append(i)
@@ -124,7 +124,7 @@ class ScrambleSquare():
 
 
 def solve_scramble(pieces: List[int], check_repeats=False, verbose=True) -> None:
-    def solve(k: int, puzzle, stack: List[int], history: Set=set(), check_repeats=False):
+    def solve(k: int, puzzle, stack: List[int], history: Set=set()):
         calls[k] += 1
         if k == SIZE:
             solution = [str(x) if x != -1 else '-' for x in puzzle.order]
@@ -143,7 +143,7 @@ def solve_scramble(pieces: List[int], check_repeats=False, verbose=True) -> None
             # try different orientations of that piece
             for r in range(NUM_ORIENTATIONS):
                 if k != 0 and check_repeats and (k, new, r) in history:
-                    continue
+                    continue # this will skip most but not all duplications
                 history.add((k, new, r))
                 if puzzle.fit_position(k, new, r):
                     # go on to the next position on the board
@@ -153,7 +153,7 @@ def solve_scramble(pieces: List[int], check_repeats=False, verbose=True) -> None
                     puzzle_next.order[k] = new
                     puzzle_next.rotation[k] = r
                     stack_next = stack[:idx] + stack[idx + 1:]
-                    solve(k + 1, puzzle_next, stack_next, history=history_next, check_repeats=check_repeats)
+                    solve(k + 1, puzzle_next, stack_next, history=history_next)
                 if k == 0:
                     break  # don't rotate the first piece
 
@@ -163,7 +163,7 @@ def solve_scramble(pieces: List[int], check_repeats=False, verbose=True) -> None
     puzzle = ScrambleSquare(pieces)
     solutions = set()
 
-    solve(0, puzzle, stack, set(), check_repeats=check_repeats)
+    solve(0, puzzle, stack, set())
 
     return solutions, calls
 
@@ -196,18 +196,6 @@ if __name__ == "__main__":
         [-red, +green, +red, -blue],
         [-green, -blue, +purple, +red],
         [-purple, -green, +red, +purple]
-    ]
-    red, green = 1, 2
-    cards = [
-        [-green, -red, green, red],
-        [-green, -red, green, red],
-        [-green, -green, green, red],
-        [-green, -red, green, red],
-        [-green, -red, green, red],
-        [-green, -red, green, red],
-        [-green, red, red, -green],
-        [-green, red, red, -red],
-        [-green, red, red, -red]
     ]
 
     solutions, calls = solve_scramble(cards, check_repeats=True, verbose=False)
