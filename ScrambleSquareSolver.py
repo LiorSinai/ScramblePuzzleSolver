@@ -28,7 +28,7 @@ Board:  5 0 1   Start at k=0 in the centre, and place cards in a clockwise spira
 
 from datetime import datetime
 from copy import copy, copy
-from typing import List
+from typing import List, Set
 
 SIZE = 9
 NUM_ORIENTATIONS = 4
@@ -39,6 +39,7 @@ class ScrambleSquare():
         self.pieces = pieces
         self.order = [-1, -1, -1, -1, -1, -1, -1, -1, -1]
         self.rotation = [0, 0, 0, 0, 0, 0, 0, 0, 0]
+        self.unique = ScrambleSquare.find_unique(pieces)
 
     def __repr__(self):
         repr = ''
@@ -86,39 +87,72 @@ class ScrambleSquare():
         return fits
     
     def rotation_mapping(self):
-        "A mapping of piece idx to rotation."
+        "A mapping of piece idx to rotation. Assumes every piece is unique"
         orientations = dict()
         for i in range(0, len(self.order)):
             if self.order[i] == -1:
                 continue
             orientations[self.order[i]] = self.rotation[i]
         return orientations
+    
+    @staticmethod
+    def find_unique(pieces):
+        seen = dict()
+        unique = []
+        idx = 0
+        for i in range(0, len(pieces)):
+            have_seen = False
+            for r in range(4):
+                piece_r = pieces[i][r:] + pieces[i][:r]
+                key = ScrambleSquare.hash(piece_r)
+                if key in seen:
+                    unique.append(seen[key])
+                    have_seen = True
+                    continue
+            if have_seen:
+                continue
+            seen[key] = i
+            unique.append(i)
+            idx += 1
+        return unique
+    
+    @staticmethod
+    def hash(piece, n=10):
+        # for each number to map to a unique positive number require n>=2*max(abs(value))+1
+        hash = ''.join(str(x % n) for x in piece)
+        return hash
 
 
-def solve_scramble(pieces: List[int]) -> None:
-    def solve(k: int, puzzle, stack: List[int]):
+def solve_scramble(pieces: List[int], check_repeats=False) -> None:
+    def solve(k: int, puzzle, stack: List[int], history: Set=set(), check_repeats=False):
         calls[k] += 1
         if k == SIZE:
-            print('Solution found!!')
-            print(puzzle)
-            orientations = puzzle.rotation_mapping()
-            print('orientations: ', orientations)
-            print('# calls =', sum(calls))
-            print(' ')
+            solution = [str(x) if x != -1 else '-' for x in puzzle.order]
+            solution_str = ''.join(solution)
+            if check_repeats and solution_str in solutions:
+                return
+            solutions.add(solution_str)
+            print_solution(puzzle, calls, check_repeats)
             return
         for idx in range(len(stack)):
             # select a new piece that hasn't been used
             new = stack[idx]
+            if check_repeats:
+                new = puzzle.unique[new]
             # try different orientations of that piece
             for r in range(NUM_ORIENTATIONS):
+                if k != 0 and check_repeats and (k, new, r) in history:
+                    continue
+                history.add((k, new, r))
                 if puzzle.fit_position(k, new, r):
                     # go on to the next position on the board
                     # use recursion to implement a backtracking algorithm:
                     puzzle_next = copy(puzzle)
+                    history_next = copy(history)
                     puzzle_next.order[k] = new
                     puzzle_next.rotation[k] = r
                     stack_next = stack[:idx] + stack[idx + 1:]
-                    solve(k + 1, puzzle_next, stack_next)
+                    solve(k + 1, puzzle_next, stack_next, history=history_next, check_repeats=check_repeats)
                 if k == 0:
                     break  # don't rotate the first piece
 
@@ -126,12 +160,22 @@ def solve_scramble(pieces: List[int]) -> None:
     calls = [0] * (SIZE + 1)
     stack = [0, 1, 2, 3, 4, 5, 6, 7, 8]
     puzzle = ScrambleSquare(pieces)
+    solutions = set()
 
-    solve(0, puzzle, stack)
+    solve(0, puzzle, stack, set(), check_repeats=check_repeats)
 
-    print('number of solutions =', calls[SIZE])
+    print('number of unique solutions =', len(solutions))
     print('total calls =', sum(calls))
     print('calls per position:', calls)
+
+
+def print_solution(puzzle, calls, check_repeats=False):
+    print('Solution found!!')
+    print(puzzle)
+    orientations = puzzle.rotation if check_repeats else puzzle.rotation_mapping()
+    print('orientations: ', orientations)
+    print('# calls =', sum(calls))
+    print(' ')
 
 
 def find_first(array, value):
@@ -154,7 +198,19 @@ if __name__ == "__main__":
         [-green, -blue, +purple, +red],
         [-purple, -green, +red, +purple]
     ]
+    red, green = 1, 2
+    cards = [
+        [-green, -red, green, red],
+        [-green, -red, green, red],
+        [-green, -green, green, red],
+        [-green, -red, green, red],
+        [-green, -red, green, red],
+        [-green, -red, green, red],
+        [-green, red, red, -green],
+        [-green, red, red, -red],
+        [-green, red, red, -red]
+    ]
 
-    solve_scramble(cards)
+    solve_scramble(cards, check_repeats=True)
 
     print('Time taken:', datetime.now() - startTime)
