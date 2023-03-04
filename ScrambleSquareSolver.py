@@ -99,19 +99,18 @@ class ScrambleSquare():
     def find_unique(pieces):
         seen = dict()
         unique = [-1] * len(pieces)
+        hash_const = 2 * abs_max_matrix(pieces) + 1
         for i in range(0, len(pieces)):
             is_unique = True
             for r in range(NUM_ORIENTATIONS):
                 piece_r = pieces[i][r:] + pieces[i][:r]
-                key = ScrambleSquare.hash(piece_r)
+                key = ScrambleSquare.hash(piece_r, n=hash_const)
                 if key in seen:
                     is_unique = False
-                    unique[i] = seen[key]
-                    continue
-            if not is_unique:
-                continue
-            seen[key] = i
-            unique[i] = i
+                    break
+            if is_unique:
+                seen[key] = i
+            unique[i] = seen[key]
         return unique
     
     @staticmethod
@@ -119,6 +118,10 @@ class ScrambleSquare():
         # for each number to map to a unique positive number require n>=2*max(abs(value))+1
         hash = ''.join(str(x % n) for x in piece)
         return hash
+    
+
+def abs_max_matrix(matrix):
+    return max([max([abs(x) for x in row]) for row in matrix])
 
 
 def solve_scramble(pieces: List[int], check_repeats=False, verbose=True) -> None:
