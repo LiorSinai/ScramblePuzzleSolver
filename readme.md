@@ -8,6 +8,6 @@ See my blog post on this at [liorsinai.github.io/coding/2020/06/26/scramble-puzz
 
 ## Run
 
-Run in with a Python debugger in an IDE.
+Run with a Python interpreter or debugger in an IDE.
 
 Or in a cmd: `python ScrambleSquareSolver.py`

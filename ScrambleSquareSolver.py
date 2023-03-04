@@ -99,7 +99,7 @@ class ScrambleSquare():
     def find_unique(pieces):
         seen = dict()
         unique = [-1] * len(pieces)
-        hash_const = 2 * abs_max_matrix(pieces) + 1
+        hash_const = 2 * max_abs_matrix(pieces) + 1
         for i in range(0, len(pieces)):
             is_unique = True
             for r in range(NUM_ORIENTATIONS):
@@ -120,7 +120,7 @@ class ScrambleSquare():
         return hash
     
 
-def abs_max_matrix(matrix):
+def max_abs_matrix(matrix):
     return max([max([abs(x) for x in row]) for row in matrix])
 
 
